@@ -95,14 +95,23 @@ struct FSEG_HEADER {
   void dump(std::ostringstream& oss) const;
 };
 
+const char* get_rec_type(uint8_t rec_t);
+
+enum rec_type {
+    REC_STATUS_ORDINARY = 0,
+    REC_STATUS_NODE_PTR = 1,
+    REC_STATUS_INFIMUM = 2,
+    REC_STATUS_SUPREMUM = 3
+};
+
 struct IndexSystemRecord_INFIMUM {
-  uint8_t info_flag() const {return (buf >> 4) << 4;}
-  uint8_t num_of_recs_owned() const {return buf << 4 >> 4;}
-  uint16_t order() const {return (order_and_rec_type >> 3) << 3;}
+  uint8_t info_flag() const {return (buf >> 4);}
+  uint8_t num_of_recs_owned() const {return buf & 0xfUL;}
+  uint16_t order() const {return (order_and_rec_type >> 3);}
   uint8_t rec_type() const {
     const uint8_t *p = reinterpret_cast<const uint8_t*>(&order_and_rec_type);
     p += 1;
-    return *p << 5;
+    return *p & 0x7UL;
   }
   //int info_flag : 4;
   //int num_of_recs_owned : 4;
@@ -118,13 +127,13 @@ struct IndexSystemRecord_INFIMUM {
 static const int i = sizeof(IndexSystemRecord_INFIMUM);
 
 struct IndexSystemRecord_SUPREMUM {
-  uint8_t info_flag() const {return buf >> 4 << 4;}
-  uint8_t num_of_recs_owned() const {return (buf << 4 >>4);}
-  uint16_t order() const{return order_and_rec_type >> 3 << 3;}
+  uint8_t info_flag() const {return buf >> 4;}
+  uint8_t num_of_recs_owned() const {return (buf & 0xfUL);}
+  uint16_t order() const{return order_and_rec_type >> 3;}
   uint8_t rec_type() const {
     const uint8_t *p = reinterpret_cast<const uint8_t*>(&order_and_rec_type);
     p += 1;
-    return *p << 5;
+    return *p & 0x7UL;
   }
   uint8_t buf;
   uint16_t order_and_rec_type;

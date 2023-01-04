@@ -77,7 +77,7 @@ void IndexSystemRecord_INFIMUM::dump(std::ostringstream &oss) const {
   oss << "INFIMUM: info flag: " << int(e(info_flag())) << "\t"
       << "num of recs owned: " << int((num_of_recs_owned())) << "\t"
       << "order: " << int(e(order())) << "\t"
-      << "rec_type: " << int(e(rec_type())) << "\t"
+      << "rec_type: " << get_rec_type(e(rec_type())) << "\t"
       << "next rec offset: " << e(next_rec_offset) << "\t"
       << "text: " << infimum << endl;
 }
@@ -87,7 +87,29 @@ void IndexSystemRecord_SUPREMUM::dump(std::ostringstream &oss) const {
   oss << "SUPREMUM: info flag: " << int(e(info_flag())) << "\t"
       << "num of recs owned: " << int((num_of_recs_owned())) << "\t"
       << "order: " << int(e(order())) << "\t"
-      << "rec_type: " << int(e(rec_type())) << "\t"
+      << "rec_type: " << get_rec_type(e(rec_type())) << "\t"
       << "next rec offset: " << e(next_rec_offset) << "\t"
       << "text: " << supremum << endl;
+}
+
+const char *innodb::get_rec_type(uint8_t rec_t)
+{
+    const char* p;
+  switch (rec_t) {
+  case REC_STATUS_ORDINARY:
+    p = "REC_STATUS_ORDINARY";
+    break;
+  case REC_STATUS_NODE_PTR:
+    p = "REC_STATUS_NODE_PTR";
+    break;
+  case REC_STATUS_INFIMUM:
+    p = "REC_STATUS_INFIMUM";
+    break;
+  case REC_STATUS_SUPREMUM:
+    p = "REC_STATUS_SUPREMUM";
+    break;
+  default:
+      p = "unknown rec type";
+  }
+  return p;
 }
