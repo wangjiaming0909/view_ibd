@@ -1,5 +1,4 @@
 #include "headers.h"
-#include "defines.h"
 #include <arpa/inet.h>
 #include <limits>
 
@@ -21,15 +20,15 @@ const std::unordered_map<uint16_t, std::string> innodb::PAGE_TYPE_STR = {
     {FIL_PAGE_RTREE, "FIL_PAGE_RTREE"},
     {FIL_PAGE_INDEX, "FIL_PAGE_INDEX"}};
 
-void FILHeader::dump(std::ostringstream &oss) const {
+void FILHeader::dump(const std::byte*b, std::ostringstream &oss) {
   using namespace std;
-  oss << "FilHeader:: check sum: " << e(check_sum) << "\t"
-      << "page number offset: " << e(page_number_offset) << "\t"
-      << "previous page: " << e(previous_page) << "\t"
-      << "next page: " << e(next_page) << "\t"
-      << "page type: " << get_page_type_str(e(page_type)) << "\t\t"
-      << "flush lsn: " << e(flush_lsn) << "\t"
-      << "space id: " << e(space_id) << endl;
+  oss << "FilHeader:: check sum: " << check_sum(b) << "\t"
+      << "page number offset: " << page_number_offset(b) << "\t"
+      << "previous page: " << previous_page(b) << "\t"
+      << "next page: " << next_page(b) << "\t"
+      << "page type: " << get_page_type_str(page_type(b)) << "\t\t"
+      << "flush lsn: " << flush_lsn(b) << "\t"
+      << "space id: " << space_id(b) << endl;
 }
 
 std::string innodb::get_page_type_str(uint16_t page_type) {
@@ -49,16 +48,16 @@ void innodb::FSPHeader::dump(std::ostringstream &oss) const {
       << "next_unnsed_seg_id: " << e(next_unused_seg_id) << endl;
 }
 
-void IndexHeader::dump(std::ostringstream &oss) const {
+void IndexHeader::dump(const std::byte*b, std::ostringstream &oss) {
   using namespace std;
-  oss << "IndexHeader: dir_slots: " << e(n_of_dir_slots) << "\t"
-      << "heap_top_pos: " << e(heap_top_pos) << "\t"
-      << "n_of_heap_recs_or_ft_fg: " << e(n_of_heap_recs_or_ft_fg) << "\t"
-      << "pg direction: " << e(pg_direction) << "\t"
-      << "n_of_records: " << e(n_of_recs) << "\t"
-      << "max_trx_id: " << e(max_trx_id) << "\t"
-      << "page_level: " << e(page_level) << "\t"
-      << "index id: " << e(index_id) << endl;
+  oss << "IndexHeader: dir_slots: " << n_of_dir_slots(b) << "\t"
+      << "heap_top_pos: " << heap_top_pos(b) << "\t"
+      << "n_of_heap_recs_or_ft_fg: " << n_of_heap_recs_or_ft_fg(b) << "\t"
+      << "pg direction: " << pg_direction(b) << "\t"
+      << "n_of_records: " << n_of_recs(b) << "\t"
+      << "max_trx_id: " << max_trx_id(b) << "\t"
+      << "page_level: " << page_level(b) << "\t"
+      << "index id: " << index_id(b) << endl;
 }
 
 void FSEG_HEADER::dump(std::ostringstream &oss) const {
@@ -78,7 +77,7 @@ void IndexSystemRecord_INFIMUM::dump(std::ostringstream &oss) const {
       << "num of recs owned: " << int((num_of_recs_owned())) << "\t"
       << "order: " << int(e(order())) << "\t"
       << "rec_type: " << get_rec_type(e(rec_type())) << "\t"
-      << "next rec offset: " << e(next_rec_offset) << "\t"
+      << "next rec offset: " << e(next_rec_offset()) << "\t"
       << "text: " << infimum << endl;
 }
 
@@ -88,7 +87,7 @@ void IndexSystemRecord_SUPREMUM::dump(std::ostringstream &oss) const {
       << "num of recs owned: " << int((num_of_recs_owned())) << "\t"
       << "order: " << int(e(order())) << "\t"
       << "rec_type: " << get_rec_type(e(rec_type())) << "\t"
-      << "next rec offset: " << e(next_rec_offset) << "\t"
+      << "next rec offset: " << e(next_rec_offset()) << "\t"
       << "text: " << supremum << endl;
 }
 

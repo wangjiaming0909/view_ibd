@@ -1,58 +1,37 @@
 #include "page.h"
-#include "defines.h"
 #include <string.h>
 #include <cassert>
 
 using namespace innodb;
 
+#define BUF (std::byte*)(buf_)
+
 Page::Page(unsigned int page_size, std::streampos offset)
-    : page_size_(page_size), offset_(offset), buf_(nullptr) {
-  buf_ = new char[page_size];
+    : page_size_(page_size), offset_(offset), buf_(nullptr), buf_allocated_(nullptr) {
+  buf_allocated_ = new unsigned char[page_size * 2];
+  unsigned long ptr = (unsigned long)(buf_allocated_ + page_size - 1);
+  unsigned long s = page_size - 1;
+  auto mask = ~s;
+  buf_ = (unsigned char*)(ptr & mask);
   memset(buf_, 0, page_size);
 }
 
 void Page::dump(std::ostringstream &oss) const {
-  get_fil_header().dump(oss);
-  auto pg_t_str = get_page_type_str(e(get_fil_header().page_type));
-  auto pg_type = e(get_fil_header().page_type);
+  FILHeader::dump(BUF, oss);
+  auto pg_t_str = get_page_type_str(FILHeader::page_type(BUF));
+  auto pg_type = FILHeader::page_type(BUF);
   switch(pg_type){
     case FIL_PAGE_INDEX:
-      IndexPage::dump(*this, oss);
+      IndexPage::dump(BUF, oss);
     default:
       break;
   }
 }
 
-Page::~Page() { delete[] buf_; }
+Page::~Page() { delete[] buf_allocated_; }
 
 
-void IndexPage::dump(const Page& page, std::ostringstream &oss) {
-  const auto *index_page = get_index_page(page);
-  index_page->get_index_header(page)->dump(oss);
-  index_page->get_fseg_header(page)->dump(oss);
-  index_page->get_infimum(page)->dump(oss);
-  index_page->get_supremum(page)->dump(oss);
+void IndexPage::dump(const std::byte* b, std::ostringstream &oss) {
+    IndexHeader::dump(b, oss);
 }
 
-const IndexPage* IndexPage::get_index_page(const Page& page) {
-  return page.get<IndexPage>(FILHeader::FILHEADER_SIZE);
-}
-
-const IndexHeader *IndexPage::get_index_header(const Page &pg) const {
-  return pg.get<IndexHeader>(FILHeader::FILHEADER_SIZE);
-}
-const FSEG_HEADER* IndexPage::get_fseg_header(const Page& pg) const {
-  return pg.get<FSEG_HEADER>(FILHeader::FILHEADER_SIZE +
-                             IndexHeader::INDEX_HEADER_SIZE);
-}
-const IndexSystemRecord_INFIMUM* IndexPage::get_infimum(const Page&pg) const {
-  return pg.get<IndexSystemRecord_INFIMUM>(
-      FILHeader::FILHEADER_SIZE + IndexHeader::INDEX_HEADER_SIZE +
-      FSEG_HEADER::FSEG_HEADER_SIZE);
-}
-const IndexSystemRecord_SUPREMUM *IndexPage::get_supremum(const Page &pg) const {
-  return pg.get<IndexSystemRecord_SUPREMUM>(
-      FILHeader::FILHEADER_SIZE + IndexHeader::INDEX_HEADER_SIZE +
-      IndexSystemRecord_INFIMUM::INDEX_SYSTEM_RECORD_SIZE +
-      FSEG_HEADER::FSEG_HEADER_SIZE);
-}

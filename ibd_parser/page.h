@@ -48,7 +48,7 @@ struct IndexPage {
   FSEG_HEADER fseg_header;
   IndexSystemRecord_INFIMUM infimum;
   IndexSystemRecord_SUPREMUM supremum;
-  static void dump(const Page& page, std::ostringstream &oss);
+  static void dump(const std::byte* page, std::ostringstream &oss);
   static const IndexPage* get_index_page(const Page& page);
 };
 
@@ -64,9 +64,9 @@ public:
   Page(unsigned int page_size, std::streampos offset);
   ~Page();
   inline std::string get_type() const {
-    return get_page_type_str(get_fil_header().page_type);
+    return get_page_type_str(FILHeader::page_type((std::byte*)buf_));
   }
-  char *get_buf() { return buf_; }
+  unsigned char *get_buf() { return buf_; }
 
   template <typename T> const T *get(unsigned int offset) const {
     LOG(INFO) << typeid(T).name()
@@ -84,7 +84,8 @@ public:
 private:
   unsigned int page_size_; // bytes
   std::streampos offset_;
-  char *buf_;
+  unsigned char *buf_;
+  unsigned char *buf_allocated_;
 };
 
 using PagePtr = std::unique_ptr<Page>;

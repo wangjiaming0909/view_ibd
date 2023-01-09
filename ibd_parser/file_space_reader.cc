@@ -22,7 +22,7 @@ PagePtr FileSpaceReader::get_page(unsigned int index) {
   PagePtr pg{new Page{PAGE_SIZE, offset}};
   auto *buf = pg->get_buf();
 
-  if (0 > read(offset, buf, PAGE_SIZE)) {
+  if (0 > read(offset, (char*)buf, PAGE_SIZE)) {
       return nullptr;
   }
   return pg;
