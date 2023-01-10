@@ -30,6 +30,9 @@ static inline uint32_t mach_read_from_4(const std::byte *b) {
         (static_cast<uint32_t>(b[2]) << 8) |static_cast<uint32_t>(b[3]));
 }
 
+static inline uint8_t mach_read_from_1(const std::byte*b) {
+    return uint8_t(b[0]);
+}
 
 static inline uint16_t mach_read_from_2(const std::byte* b) {
   return (((ulint)(b[0]) << 8) | (ulint)(b[1]));
@@ -44,4 +47,20 @@ static inline uint64_t mach_read_from_8(const std::byte* b) {
   u64 |= mach_read_from_4(b+4);
 
   return u64;
+}
+
+static inline ulint rec_get_bit_field_1(const std::byte* rec, ulint offs, ulint mask, ulint shift) {
+  return ((mach_read_from_1(rec-offs) & mask) >> shift);
+}
+
+static inline uint16_t rec_get_bit_field_2(const std::byte *rec, ulint offs, ulint mask, ulint shift) {
+  return ((mach_read_from_2(rec-offs) & mask) >> shift);
+}
+
+static inline ulint align_offset(const void*ptr, ulint align_no) {
+  return (((ulint)ptr) & (align_no - 1));
+}
+
+static inline void* align_down(const void*ptr, ulint align_no) {
+  return ((void*)((((ulint)ptr)) & ~(align_no - 1)));
 }

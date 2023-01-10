@@ -38,14 +38,13 @@ std::string innodb::get_page_type_str(uint16_t page_type) {
   return it->second;
 }
 
-void innodb::FSPHeader::dump(std::ostringstream &oss) const {
+void innodb::FSPHeader::dump(const std::byte*pg, std::ostringstream &oss) {
   using namespace std;
-  oss << "FSPHeader: space_id" << e(space_id) << "\t"
-      << "highest_pg_n_in_f: " << e(highest_page_number_in_file) << "\t"
-      << "higest_pg_n_inited: " << highest_page_number_initialized << "\t"
-      << "flags: " << e(flags) << "\t"
-      << "no_pg_in_free_frag: " << e(no_pages_in_free_frag) << "\t"
-      << "next_unnsed_seg_id: " << e(next_unused_seg_id) << endl;
+  oss << "FSPHeader: space_id: " << space_id(pg) << "\t"
+      << "fsp_size in page: " << fsp_size(pg) << "\t"
+      << "fsp_free_limit: " << fsp_free_limit(pg) << "\t"
+      << "flags: " << space_flags(pg) << "\t"
+      << "frag_n_used: " << frag_n_used(pg) << endl;
 }
 
 void IndexHeader::dump(const std::byte*b, std::ostringstream &oss) {
@@ -69,26 +68,6 @@ void FSEG_HEADER::dump(std::ostringstream &oss) const {
       << "internal_inode_space_id: " << e(internal_inode_space_id) << "\t"
       << "internal inode pg num: " << e(unternal_inode_pg_num) << "\t"
       << "internal inode offset: " << e(internal_inode_offset) << endl;
-}
-
-void IndexSystemRecord_INFIMUM::dump(std::ostringstream &oss) const {
-  using namespace std;
-  oss << "INFIMUM: info flag: " << int(e(info_flag())) << "\t"
-      << "num of recs owned: " << int((num_of_recs_owned())) << "\t"
-      << "order: " << int(e(order())) << "\t"
-      << "rec_type: " << get_rec_type(e(rec_type())) << "\t"
-      << "next rec offset: " << e(next_rec_offset()) << "\t"
-      << "text: " << infimum << endl;
-}
-
-void IndexSystemRecord_SUPREMUM::dump(std::ostringstream &oss) const {
-  using namespace std;
-  oss << "SUPREMUM: info flag: " << int(e(info_flag())) << "\t"
-      << "num of recs owned: " << int((num_of_recs_owned())) << "\t"
-      << "order: " << int(e(order())) << "\t"
-      << "rec_type: " << get_rec_type(e(rec_type())) << "\t"
-      << "next rec offset: " << e(next_rec_offset()) << "\t"
-      << "text: " << supremum << endl;
 }
 
 const char *innodb::get_rec_type(uint8_t rec_t)

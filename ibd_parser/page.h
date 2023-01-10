@@ -40,23 +40,7 @@ struct INodePage {
 };
 
 struct IndexPage {
-  const IndexHeader *get_index_header(const Page &pg) const;
-  const FSEG_HEADER* get_fseg_header(const Page& pg) const;
-  const IndexSystemRecord_INFIMUM* get_infimum(const Page&pg) const;
-  const IndexSystemRecord_SUPREMUM *get_supremum(const Page &pg) const;
-  IndexHeader index_header;
-  FSEG_HEADER fseg_header;
-  IndexSystemRecord_INFIMUM infimum;
-  IndexSystemRecord_SUPREMUM supremum;
   static void dump(const std::byte* page, std::ostringstream &oss);
-  static const IndexPage* get_index_page(const Page& page);
-};
-
-class IIndexPage {
-  const IndexHeader& get_index_header() const;
-  const FSEG_HEADER& get_fseg_header() const;
-  const IndexSystemRecord_INFIMUM& get_infimum() const;
-  const IndexSystemRecord_SUPREMUM get_supremum() const;
 };
 
 class Page {

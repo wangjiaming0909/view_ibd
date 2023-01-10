@@ -5,8 +5,6 @@
 
 using namespace innodb;
 
-unsigned int FileSpaceReader::PAGE_SIZE = 16 * 1024;
-
 FileSpaceReader::FileSpaceReader(const char *file)
     : file_name_(file), file_opened_(false), ifs_() {
   assert(file);

@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <unordered_map>
 
+
+#define PAGE_SIZE 16384
+
 namespace innodb {
 
 enum PAGE_TYPE {
@@ -22,6 +25,9 @@ enum PAGE_TYPE {
   FIL_PAGE_RTREE = 17854,
   FIL_PAGE_INDEX = 17855
 };
+
+constexpr ulint FIL_ADDR_SIZE =6;
+constexpr ulint FLST_BASE_NODE_SIZE = 4 + 2 * FIL_ADDR_SIZE;
 
 class Page;
 
@@ -54,20 +60,33 @@ extern const std::unordered_map<uint16_t, std::string> PAGE_TYPE_STR;
 std::string get_page_type_str(uint16_t page_type);
 
 struct FSPHeader {
-  uint32_t space_id;
-  uint32_t unused;
-  uint32_t highest_page_number_in_file;
-  uint32_t highest_page_number_initialized;
-  uint32_t flags;
-  uint32_t no_pages_in_free_frag;
-  unsigned char list_base_node_for_free_list[16];
-  unsigned char list_base_node_for_free_frag_list[16];
-  unsigned char list_base_node_for_full_frag_list[16];
-  uint64_t next_unused_seg_id;
-  unsigned char list_base_node_for_full_inodes_list[16];
-  unsigned char list_base_node_for_free_inodes_list[16];
-  static constexpr unsigned char FSPHEADER_SIZE = 150 - 38;
-  void dump(std::ostringstream &oss) const;
+    static constexpr uint8_t FSP_SPACE_ID = 0;
+    static constexpr uint8_t FSP_NOT_USED = 4;
+    static constexpr uint8_t FSP_SIZE = 8; // cur size of the space in pages
+    static constexpr uint8_t FSP_FREE_LIMIT = 12;
+    static constexpr uint8_t FSP_SPACE_FLAGS = 16;
+    static constexpr uint8_t FSP_FRAG_N_USED = 20;
+    static constexpr uint8_t FSP_FREE = 24;
+    static constexpr uint8_t FSP_HEADER_OFFSET = FILHeader::FIL_PAGE_DATA;
+    static constexpr auto FSP_HEADER_SIZE = 32+5*FLST_BASE_NODE_SIZE;
+
+        static uint32_t space_id(const std::byte* pg) {
+            return mach_read_from_4(pg + FSP_HEADER_OFFSET + FSP_SPACE_ID);
+        }
+  static uint32_t unused;
+  static uint32_t fsp_size(const std::byte*pg)  {
+    return mach_read_from_4(pg + FSP_HEADER_OFFSET + FSP_SIZE);
+  }
+  static uint32_t fsp_free_limit(const std::byte*pg) {
+      return mach_read_from_4(pg + FSP_HEADER_OFFSET + FSP_FREE_LIMIT);
+  }
+  static uint32_t space_flags (const std::byte*pg) {
+      return mach_read_from_4(pg + FSP_HEADER_OFFSET + FSP_SPACE_FLAGS);
+  }
+  static uint32_t frag_n_used(const std::byte *pg) {
+      return mach_read_from_4(pg + FSP_HEADER_OFFSET + FSP_FRAG_N_USED);
+  }
+  static void dump(const std::byte *pg, std::ostringstream &oss);
 };
 
 struct XDES_E {
@@ -135,48 +154,55 @@ enum rec_type {
     REC_STATUS_SUPREMUM = 3
 };
 
+struct Record {
+    static void dump(const std::byte*rec, std::ostringstream& oss);
+};
+
 struct RecordHeader {
-    uint8_t buf[5];
-    uint8_t info_flag() const {return buf[0] >> 4;}
-    uint8_t num_of_recs_owned() const {return buf[0] & 0xfUL;}
-    uint16_t order() const {return reinterpret_cast<const uint16_t*>(buf+1)[0] >> 3;}
-    uint8_t rec_type() const { return buf[2] & 0x7UL;}
-    uint16_t next_rec_offset() const {return reinterpret_cast<const uint16_t*>(buf+3)[0];}
-};
+  static constexpr uint8_t REC_NEW_INFO_BITS = 5;
+  static constexpr auto REC_INFO_BITS_MASK = 0xF0UL;
+  static constexpr uint8_t REC_INFO_BITS_SHIFT = 0;
 
-struct IndexSystemRecord_INFIMUM{
-  uint8_t info_flag() const {return header.info_flag();}
-  uint8_t num_of_recs_owned() const {return header.num_of_recs_owned();}
-  uint16_t order() const {return header.order();}
-  uint8_t rec_type() const { return header.rec_type();}
-  uint16_t next_rec_offset() const {return header.next_rec_offset();}
-  RecordHeader header;
-  char infimum[8];
-  static constexpr unsigned int INDEX_SYSTEM_RECORD_SIZE = 107 - 94;
-  void dump(std::ostringstream& oss) const;
-};
-static const int i = sizeof(IndexSystemRecord_INFIMUM);
+  static constexpr uint8_t REC_NEW_N_OWNED = 5;
+  static constexpr auto REC_N_OWNED_MASK = 0xFUL;
+  static constexpr uint8_t REC_N_OWNED_SHIFT = 0;
 
-struct IndexSystemRecord_SUPREMUM {
-  uint8_t info_flag() const {return header.info_flag();}
-  uint8_t num_of_recs_owned() const {return header.num_of_recs_owned();}
-  uint16_t order() const {return header.order();}
-  uint8_t rec_type() const { return header.rec_type();}
-  uint16_t next_rec_offset() const {return header.next_rec_offset();}
-  RecordHeader header;
+  static constexpr uint8_t REC_NEW_HEAP_NO = 4;
+  static constexpr auto REC_HEAP_NO_MASK = 0xFFF8UL;
+  static constexpr uint8_t REC_HEAP_NO_SHIFT = 3;
 
-  char supremum[8];
-  static constexpr unsigned int INDEX_SYSTEM_RECORD_SIZE = 120 - 107;
-  void dump(std::ostringstream& oss) const;
-};
+  static constexpr uint8_t REC_NEW_STATUS = 3;
+  static constexpr auto REC_NEW_STAUTS_MASK = 0x7UL;
+  static constexpr uint8_t REC_NEW_STATUS_SHIFT = 0;
 
-struct UserRecord{
-  uint8_t info_flag() const {return header.info_flag();}
-  uint8_t num_of_recs_owned() const {return header.num_of_recs_owned();}
-  uint16_t order() const {return header.order();}
-  uint8_t rec_type() const { return header.rec_type();}
-  uint16_t next_rec_offset() const {return header.next_rec_offset();}
-  RecordHeader header;
+  static constexpr uint8_t REC_NEXT = 2;
+
+  static inline uint8_t info_bits(const std::byte*rec) {
+    return rec_get_bit_field_1(rec, REC_NEW_INFO_BITS, REC_INFO_BITS_MASK, REC_INFO_BITS_SHIFT);
+  }
+  static inline uint8_t num_of_recs_owned(const std::byte*rec) {
+    return rec_get_bit_field_1(rec, REC_NEW_N_OWNED, REC_N_OWNED_MASK, REC_N_OWNED_SHIFT);
+  }
+
+  static inline uint16_t heap_no_new(const std::byte*rec) {
+    return rec_get_bit_field_2(rec, REC_NEW_HEAP_NO, REC_HEAP_NO_MASK, REC_HEAP_NO_SHIFT);
+  }
+  static inline uint8_t rec_status(const std::byte*rec) {
+    return rec_get_bit_field_1(rec, REC_NEW_STATUS, REC_NEW_STAUTS_MASK, REC_NEW_STATUS_SHIFT);
+  }
+  static inline uint16_t next_offs(const std::byte*rec) {
+    ulint field_value = mach_read_from_2(rec - REC_NEXT);
+
+    if (field_value == 0) return 0;
+    return align_offset(rec + field_value, PAGE_SIZE);
+  }
+
+  static inline std::byte* next_ptr(std::byte*rec) {
+    ulint field_value = mach_read_from_2(rec - REC_NEXT);
+    if (field_value == 0) return nullptr;
+
+    return ((std::byte*)align_down(rec, PAGE_SIZE) + align_offset(rec + field_value, PAGE_SIZE));
+  }
 };
 
 struct IndexPageDirectory{};

@@ -16,8 +16,6 @@ public:
   /// @return nullptr if reader got error, other the pageptr is returned
   PagePtr get_page(unsigned int index);
 
-  static unsigned int PAGE_SIZE;
-
 private:
   /// @brief open the file
   /// @return -1 when got error, check errno, 0 for succeed.
