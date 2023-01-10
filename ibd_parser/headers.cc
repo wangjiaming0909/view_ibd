@@ -1,5 +1,6 @@
 #include "headers.h"
 #include <arpa/inet.h>
+#include <cassert>
 #include <limits>
 
 using namespace innodb;
@@ -20,7 +21,7 @@ const std::unordered_map<uint16_t, std::string> innodb::PAGE_TYPE_STR = {
     {FIL_PAGE_RTREE, "FIL_PAGE_RTREE"},
     {FIL_PAGE_INDEX, "FIL_PAGE_INDEX"}};
 
-void FILHeader::dump(const std::byte*b, std::ostringstream &oss) {
+void FILHeader::dump(const std::byte *b, std::ostringstream &oss) {
   using namespace std;
   oss << "FilHeader:: check sum: " << check_sum(b) << "\t"
       << "page number offset: " << page_number_offset(b) << "\t"
@@ -38,7 +39,7 @@ std::string innodb::get_page_type_str(uint16_t page_type) {
   return it->second;
 }
 
-void innodb::FSPHeader::dump(const std::byte*pg, std::ostringstream &oss) {
+void innodb::FSPHeader::dump(const std::byte *pg, std::ostringstream &oss) {
   using namespace std;
   oss << "FSPHeader: space_id: " << space_id(pg) << "\t"
       << "fsp_size in page: " << fsp_size(pg) << "\t"
@@ -47,7 +48,7 @@ void innodb::FSPHeader::dump(const std::byte*pg, std::ostringstream &oss) {
       << "frag_n_used: " << frag_n_used(pg) << endl;
 }
 
-void IndexHeader::dump(const std::byte*b, std::ostringstream &oss) {
+void IndexHeader::dump(const std::byte *b, std::ostringstream &oss) {
   using namespace std;
   oss << "IndexHeader: dir_slots: " << n_of_dir_slots(b) << "\t"
       << "heap_top_pos: " << heap_top_pos(b) << "\t"
@@ -59,20 +60,15 @@ void IndexHeader::dump(const std::byte*b, std::ostringstream &oss) {
       << "index id: " << index_id(b) << endl;
 }
 
-void FSEG_HEADER::dump(std::ostringstream &oss) const {
+void FSEG_HEADER::dump(const std::byte *pg, std::ostringstream &oss) {
   using namespace std;
-  oss << "FSEG_HEADER: leaf page inode spid: " << e(leaf_pg_inode_space_id)
-      << "\t"
-      << "leaf_pg_inode_pg_num: " << e(leaf_pg_inode_pg_num) << "\t"
-      << "leaf_pg_inode_offset: " << e(leaf_pg_inode_offset) << "\t"
-      << "internal_inode_space_id: " << e(internal_inode_space_id) << "\t"
-      << "internal inode pg num: " << e(unternal_inode_pg_num) << "\t"
-      << "internal inode offset: " << e(internal_inode_offset) << endl;
+  oss << "FSEG_HEADER: fseg_space: " << fseg_space(pg) << "\t"
+      << "fseg_hdr_page_no: " << fseg_hdr_page_no(pg) << "\t"
+      << "fseg_hdr_offset: " << fseg_hdr_offset(pg) << endl;
 }
 
-const char *innodb::get_rec_type(uint8_t rec_t)
-{
-    const char* p;
+const char *innodb::get_rec_type(uint8_t rec_t) {
+  const char *p;
   switch (rec_t) {
   case REC_STATUS_ORDINARY:
     p = "REC_STATUS_ORDINARY";
@@ -87,7 +83,50 @@ const char *innodb::get_rec_type(uint8_t rec_t)
     p = "REC_STATUS_SUPREMUM";
     break;
   default:
-      p = "unknown rec type";
+    p = "unknown rec type";
   }
   return p;
+}
+
+void RecordHeader::dump(const std::byte *rec, std::ostringstream &oss)
+{
+  using namespace std;
+  oss << "rec: off: " << (ulint)(rec - (const std::byte*)align_down(rec, PAGE_SIZE))
+      << "\tinfo_bits: " << std::to_string(info_bits(rec)) << "\t"
+      << "num_of_recs_owned: " << std::to_string(num_of_recs_owned(rec)) << "\t"
+      << "heap_no_new: " << heap_no_new(rec) << "\t"
+      << "rec_status: " << get_rec_type(rec_status(rec)) << "\t";
+
+  switch (rec_status(rec)) {
+  case REC_STATUS_INFIMUM:
+  case REC_STATUS_SUPREMUM:
+  case REC_STATUS_ORDINARY:
+      oss << "next_offs: " << next_offs(rec) << "\t";
+      break;
+  case REC_STATUS_NODE_PTR:
+      oss << "next_ptr: " << next_ptr(rec) << "\t";
+      break;
+  default:
+      break;
+  }
+  oss << endl;
+}
+
+void Records::dump(const std::byte *pg, std::ostringstream &oss)
+{
+  auto * const infimum = pg + PAGE_NEW_INFIMUM;
+  auto * const supremum = pg + PAGE_NEW_SUPREMUM;
+
+  auto *cur = infimum;
+  while (cur != supremum) {
+    if (RecordHeader::rec_status(cur) == REC_STATUS_ORDINARY || RecordHeader::rec_status(cur) == REC_STATUS_INFIMUM) {
+      RecordHeader::dump(cur, oss);
+      cur = pg + RecordHeader::next_offs(cur);
+    } else {
+      RecordHeader::dump(cur, oss);
+      assert(RecordHeader::rec_status(cur) == REC_STATUS_NODE_PTR);
+      cur = RecordHeader::next_ptr(cur);
+    }
+  }
+  RecordHeader::dump(supremum, oss);
 }

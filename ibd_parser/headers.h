@@ -6,6 +6,7 @@
 
 
 #define PAGE_SIZE 16384
+#define PAGE_BTR_SEG_LEAF 36
 
 namespace innodb {
 
@@ -135,14 +136,24 @@ struct IndexHeader {
 };
 
 struct FSEG_HEADER {
-  uint32_t leaf_pg_inode_space_id;
-  uint32_t leaf_pg_inode_pg_num;
-  uint16_t leaf_pg_inode_offset;
-  uint32_t internal_inode_space_id;
-  uint32_t unternal_inode_pg_num;
-  uint16_t internal_inode_offset;
-  static constexpr unsigned int FSEG_HEADER_SIZE = 94 - 74;
-  void dump(std::ostringstream& oss) const;
+  static constexpr uint8_t FSEG_HDR_SPACE = 0;
+  static constexpr uint8_t FSEG_HDR_PAGE_NO = 4;
+  static constexpr uint8_t FSEG_HDR_OFFSET = 8;
+  static constexpr uint8_t FSEG_HEADER_SIZE = 10;
+  static constexpr uint8_t FSEG_PAGE_DATA = FILHeader::FIL_PAGE_DATA;
+  static const std::byte* fseg_header(const std::byte *pg) {
+      return pg + FSPHeader::FSP_HEADER_OFFSET + PAGE_BTR_SEG_LEAF;
+  }
+  static uint32_t fseg_space(const std::byte *pg) {
+    return mach_read_from_4(fseg_header(pg) + FSEG_HDR_SPACE);
+  }
+  static uint32_t fseg_hdr_page_no(const std::byte *pg) {
+    return mach_read_from_4(fseg_header(pg) + FSEG_HDR_PAGE_NO);
+  }
+  static uint16_t fseg_hdr_offset(const std::byte* pg){
+    return mach_read_from_2(fseg_header(pg) + FSEG_HDR_OFFSET);
+  }
+  static void dump(const std::byte *pg, std::ostringstream& oss);
 };
 
 const char* get_rec_type(uint8_t rec_t);
@@ -154,8 +165,15 @@ enum rec_type {
     REC_STATUS_SUPREMUM = 3
 };
 
-struct Record {
-    static void dump(const std::byte*rec, std::ostringstream& oss);
+constexpr uint8_t PAGE_HEADER = FSEG_HEADER::FSEG_PAGE_DATA;
+constexpr uint8_t PAGE_DATA = PAGE_HEADER + 36 + 2 * FSEG_HEADER::FSEG_HEADER_SIZE;
+constexpr uint8_t REC_N_EXTRA_BYTES = 5;
+constexpr auto PAGE_NEW_INFIMUM = PAGE_DATA + REC_N_EXTRA_BYTES;
+constexpr auto PAGE_NEW_SUPREMUM = PAGE_DATA + 2 * REC_N_EXTRA_BYTES + 8;
+constexpr auto PAGE_NEW_SUPREMUM_END = PAGE_NEW_SUPREMUM + 8;
+
+struct Records {
+    static void dump(const std::byte*pg, std::ostringstream& oss);
 };
 
 struct RecordHeader {
@@ -197,12 +215,14 @@ struct RecordHeader {
     return align_offset(rec + field_value, PAGE_SIZE);
   }
 
-  static inline std::byte* next_ptr(std::byte*rec) {
+  static inline std::byte* next_ptr(const std::byte*rec) {
     ulint field_value = mach_read_from_2(rec - REC_NEXT);
     if (field_value == 0) return nullptr;
 
     return ((std::byte*)align_down(rec, PAGE_SIZE) + align_offset(rec + field_value, PAGE_SIZE));
   }
+
+  static void dump(const std::byte *rec, std::ostringstream &oss);
 };
 
 struct IndexPageDirectory{};

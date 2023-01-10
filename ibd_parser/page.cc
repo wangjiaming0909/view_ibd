@@ -33,5 +33,7 @@ Page::~Page() { delete[] buf_allocated_; }
 
 void IndexPage::dump(const std::byte* b, std::ostringstream &oss) {
     IndexHeader::dump(b, oss);
+    FSEG_HEADER::dump(b, oss);
+    Records::dump(b, oss);
 }
 
