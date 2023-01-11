@@ -40,7 +40,7 @@ struct INodePage {
 };
 
 struct IndexPage {
-  static void dump(const std::byte* page, std::ostringstream &oss);
+  static void dump(const byte* page, std::ostringstream &oss);
 };
 
 class Page {
@@ -48,7 +48,7 @@ public:
   Page(unsigned int page_size, std::streampos offset);
   ~Page();
   inline std::string get_type() const {
-    return get_page_type_str(FILHeader::page_type((std::byte*)buf_));
+    return get_page_type_str(FILHeader::page_type((byte*)buf_));
   }
   unsigned char *get_buf() { return buf_; }
 

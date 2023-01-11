@@ -4,7 +4,7 @@
 
 using namespace innodb;
 
-#define BUF (std::byte*)(buf_)
+#define BUF (byte*)(buf_)
 
 Page::Page(unsigned int page_size, std::streampos offset)
     : page_size_(page_size), offset_(offset), buf_(nullptr), buf_allocated_(nullptr) {
@@ -31,9 +31,10 @@ void Page::dump(std::ostringstream &oss) const {
 Page::~Page() { delete[] buf_allocated_; }
 
 
-void IndexPage::dump(const std::byte* b, std::ostringstream &oss) {
+void IndexPage::dump(const byte* b, std::ostringstream &oss) {
     IndexHeader::dump(b, oss);
     FSEG_HEADER::dump(b, oss);
     Records::dump(b, oss);
+    IndexPageDirectory::dump(b, oss);
 }
 
