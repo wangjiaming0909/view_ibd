@@ -17,7 +17,8 @@ FileSpaceReader::~FileSpaceReader() {
 PagePtr FileSpaceReader::get_page(unsigned int index) {
   std::streampos offset{};
   offset = index * PAGE_SIZE;
-  PagePtr pg{new Page{PAGE_SIZE, offset}};
+  PagePtr pg{new Page{PAGE_SIZE}};
+  pg->set_page_no(index);
   auto *buf = pg->get_buf();
 
   if (0 > read(offset, (char*)buf, PAGE_SIZE)) {

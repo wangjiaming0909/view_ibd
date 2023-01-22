@@ -1,7 +1,13 @@
 #pragma once
-
 #include <cstddef>
 #include <cstdint>
+#ifdef TESTING
+#define PRIVATE public
+#define PROTECTED public
+#else
+#define PRIVATE private
+#define PROTECTED protected
+#endif
 
 using byte = std::byte;
 #define ulint unsigned long

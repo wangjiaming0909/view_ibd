@@ -43,33 +43,33 @@ struct IndexPage {
   static void dump(const byte* page, std::ostringstream &oss);
 };
 
+
+using SpaceID = uint64_t;
+using PageNO = uint64_t;
+using Rec = std::byte;
+struct PageID {
+  SpaceID space_id;
+  PageNO page_no;
+};
+
 class Page {
 public:
-  Page(unsigned int page_size, std::streampos offset);
+  Page(unsigned int page_size);
   ~Page();
   inline std::string get_type() const {
     return get_page_type_str(FILHeader::page_type((byte*)buf_));
   }
   unsigned char *get_buf() { return buf_; }
 
-  template <typename T> const T *get(unsigned int offset) const {
-    LOG(INFO) << typeid(T).name()
-              << " offset: " << offset_ + offset;
-    return reinterpret_cast<T *>(buf_ + offset);
-  }
-
-  std::string get_str(unsigned int offset, unsigned int size) {
-    return std::string(buf_[offset], size);
-  }
-
-  const FILHeader &get_fil_header() const { return *((FILHeader *)buf_); }
   void dump(std::ostringstream &oss) const;
+  void set_space_id(SpaceID sp_id) { page_id_.space_id = sp_id; }
+  void set_page_no(PageNO pg_no) { page_id_.page_no = pg_no; }
 
 private:
   unsigned int page_size_; // bytes
-  std::streampos offset_;
   unsigned char *buf_;
   unsigned char *buf_allocated_;
+  PageID page_id_;
 };
 
 using PagePtr = std::unique_ptr<Page>;
