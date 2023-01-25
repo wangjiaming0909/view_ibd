@@ -48,6 +48,8 @@ using SpaceID = uint64_t;
 using PageNO = uint64_t;
 using Rec = std::byte;
 struct PageID {
+  PageID(SpaceID sp_id = 0, PageNO pg_no = 0)
+      : space_id(sp_id), page_no(pg_no) {}
   SpaceID space_id;
   PageNO page_no;
 };

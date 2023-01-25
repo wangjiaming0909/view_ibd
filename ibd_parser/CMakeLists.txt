@@ -8,12 +8,13 @@ add_library(ibd_parser SHARED
 file_space_reader.h file_space_reader.cc
 dd.h
 dd_table.h
-dd_properties.h
+dd_properties.h dd_properties.cc
 dd_index.h
-design.h
-dd_cache.h
-table.h
-parser.h parser.cc)
+buffer_pool.h
+dd_cache.h dd_cache.cc
+table.h table.cc
+parser.h parser.cc
+table_loader.h table_loader.cc)
 
 
 #aux_source_directory(ibd_parser IBD_PARSER_DIR)

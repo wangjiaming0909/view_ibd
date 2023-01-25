@@ -17,9 +17,9 @@ void dump_page(innodb::FileSpaceReader &reader, int i) {
 
 TEST(parser, index_page) {
   innodb::FileSpaceReader reader(
-      //"/home/wjm/mysqldata/data/master/test/sbtest1.ibd");
+      "/home/wjm/mysqldata/data/master/test/sbtest1.ibd");
       //"/media/wjm/A/tmp/sbtest1.ibd");
-      "/mnt/tmp/mysql.ibd");
+      //"/mnt/tmp/mysql.ibd");
   for (int i = 0; i < 6; ++i) {
     dump_page(reader, i);
     printf("----------------------------------\n");

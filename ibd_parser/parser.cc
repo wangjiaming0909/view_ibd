@@ -1,7 +1,7 @@
 #include "parser.h"
+#include "dd_cache.h"
 #include <filesystem>
 #include <glog/logging.h>
-#include "dd_cache.h"
 
 Parser::Parser(const char *path) : data_dir_(path) {}
 
@@ -10,12 +10,11 @@ int Parser::init() {
   return ret;
 }
 
-
-innodb::Table *Parser::get_table(const char* schema, const char* tb_name) {
+innodb::Table *Parser::get_table(const char *schema, const char *tb_name) {
   return nullptr;
 }
 
-innodb::dd::DD_Cache& Parser::dd_cache() {
+innodb::dd::DD_Cache &Parser::dd_cache() {
   return innodb::dd::DD_Cache::instance();
 }
 
@@ -55,7 +54,7 @@ int Parser::scan_data_dir() {
   return ret;
 }
 
-bool Parser::is_defined_dir(const char* path) {
+bool Parser::is_defined_dir(const char *path) {
   std::filesystem::path p = path;
   static std::unordered_set<std::string> defined_dir = {
       "information_schema", "mysql", "performance_schema", "sys",
