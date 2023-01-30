@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <mutex>
 #ifdef TESTING
 #define PRIVATE public
 #define PROTECTED public
@@ -14,6 +15,10 @@ using byte = std::byte;
 
 #define PAGE_SIZE 16384
 #define PAGE_BTR_SEG_LEAF 36
+
+#define lock_t std::mutex
+template <typename LOCK>
+using guard_t = std::lock_guard<LOCK>;
 
 template <typename T> T e(const T &t) {
   T ret;

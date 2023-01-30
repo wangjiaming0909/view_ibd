@@ -14,17 +14,15 @@ FileSpaceReader::~FileSpaceReader() {
     ifs_.close();
 }
 
-PagePtr FileSpaceReader::get_page(unsigned int index) {
+int FileSpaceReader::read_page(Page *pg) {
   std::streampos offset{};
-  offset = index * PAGE_SIZE;
-  PagePtr pg{new Page{PAGE_SIZE}};
-  pg->set_page_no(index);
+  offset = pg->get_page_id().page_no * PAGE_SIZE;
   auto *buf = pg->get_buf();
 
   if (0 > read(offset, (char*)buf, PAGE_SIZE)) {
-      return nullptr;
+      return -1;
   }
-  return pg;
+  return 0;
 }
 
 long FileSpaceReader::read(std::streampos offset, char *buf,

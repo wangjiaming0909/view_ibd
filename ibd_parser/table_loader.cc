@@ -40,8 +40,6 @@ int TableLoader::fill_properties() {
 
 int TableLoader::fill_table() {
   dd::DD_Tables *dd_tables = dd_cache().get_dd_table<dd::DD_Tables>();
-
-  auto* idx = dd_tables->get_cluster_idx();
 }
 
 int TableLoader::fill_index() {

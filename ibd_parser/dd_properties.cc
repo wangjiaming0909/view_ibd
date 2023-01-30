@@ -18,10 +18,15 @@ void DD_Properties::init() { auto *clust_idx = new Index();
 }
 
 int DD_Properties::load_properties() {
-  Index::Rec_Oper_t oper = [](byte *) {};
+  std::string s;
+  Index::Rec_Oper_t oper = [&](byte *rec) {
+    auto* p = (char*)rec;
+    s.assign(p);
+  };
 
   auto clust_idx = indexes_.front();
   auto ret = clust_idx->search(oper, Index::Always_True_Comp);
+  return ret;
 }
 
 int DD_Properties::get_property(const char* key, std::string& ret) {

@@ -1,4 +1,5 @@
 #include "table.h"
+#include "buffer_pool.h"
 
 
 namespace innodb {
@@ -16,12 +17,10 @@ const Index::Rec_Comp_t Index::True_Once_Comp = [](const byte *) {
 };
 
 int Index::search(Rec_Oper_t &func, const Rec_Comp_t &comp) {
-
 }
 
-int Index::get_first_rec() {
-  // the first rec 
-
+byte* Index::get_first_rec() {
+  auto& bp = buffer_pool_t::instance();
 }
 
 int Index::get_next_rec() {

@@ -27,6 +27,7 @@ protected:
 class DD_Tables : public DD_Abstract_Table {
 public:
   DD_Tables() : DD_Abstract_Table(DD_SPACE, NAME, 0) {}
+  int init_table(Table* tb);
   static constexpr const char *NAME = "mysql.tables";
 };
 

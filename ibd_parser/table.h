@@ -5,12 +5,17 @@
 
 namespace innodb {
 
+class Table;
+
 class Schema {
+public:
+  Schema(const char* name) : name(name) {}
+  void add_table(const char *name, Table *tb) { tables_[name] = tb; }
+
 private:
   std::string name;
+  std::unordered_map<std::string, Table*> tables_;
 };
-
-class Table;
 
 enum struct FieldType {
   LONG, VARCHAR
@@ -51,10 +56,8 @@ public:
   static const Rec_Comp_t True_Once_Comp;
 
 private:
-  // @brief get first rec of this idx, if no recs found, return -1;
-  // we will skip inf and sup records.
-  int get_first_rec();
-  // @return return 0 if found, -1 if no next rec
+  // @breif return the first rec in the index
+  byte* get_first_rec();
   int get_next_rec();
 };
 
@@ -68,11 +71,14 @@ public:
 
   virtual bool is_dd_tb() const { return false; }
 
+  bool is_inited() const { return inited_; }
+
 protected:
   void set_fil_name(const char *fil) { fil_name_ = fil; }
   void set_space_id(SpaceID sp_id) { space_id_ = sp_id; }
 
 PROTECTED:
+  bool inited_ = false;
   std::string schema_name_;
   std::string tb_name_;
   std::string fil_name_;

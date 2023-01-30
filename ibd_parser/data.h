@@ -6,8 +6,13 @@
 namespace innodb {
 
 class Record {
-  void *data;
-  FieldType type;
+  void *data_;
+  Table* tb_;
+
+  public:
+  uint field_num() const ;
+  template <typename T>
+  int get_field(uint field_pos);
 };
 
 class Tuple {

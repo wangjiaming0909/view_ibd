@@ -12,9 +12,9 @@ public:
   ~FileSpaceReader();
 
   /// @brief get the specified page
-  /// @param index the index of the page
-  /// @return nullptr if reader got error, other the pageptr is returned
-  PagePtr get_page(unsigned int index);
+  /// @param pg the page to writen data into
+  /// @return 0 if the data has been writen into page, otherwise -1 is returned
+  int read_page(Page *pg);
 
 private:
   /// @brief open the file
