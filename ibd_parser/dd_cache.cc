@@ -21,6 +21,7 @@ void DD_Cache::add_to_cache(DD_Abstract_Table* tb) {
 
 void DD_Cache::init_dd_properties() {
   auto *dd_prop = new DD_Properties();
+  dd_prop->load_properties();
   add_to_cache(dd_prop);
 }
 

@@ -7,6 +7,7 @@ add_library(ibd_parser SHARED
     file_space.h
 file_space_reader.h file_space_reader.cc
 dd.h
+data.h
 dd_table.h
 dd_properties.h dd_properties.cc
 dd_index.h

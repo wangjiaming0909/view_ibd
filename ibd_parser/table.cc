@@ -1,5 +1,6 @@
 #include "table.h"
 #include "buffer_pool.h"
+#include <stack>
 
 
 namespace innodb {
@@ -17,14 +18,12 @@ const Index::Rec_Comp_t Index::True_Once_Comp = [](const byte *) {
 };
 
 int Index::search(Rec_Oper_t &func, const Rec_Comp_t &comp) {
-}
+  buf_page_t *page = buffer_pool_t::instance().get_page(page_id_, page_fetch_t::NORMAL);
 
-byte* Index::get_first_rec() {
-  auto& bp = buffer_pool_t::instance();
-}
-
-int Index::get_next_rec() {
-
+  while (page) {
+    auto rec = page->first_rec();
+  }
+  return -1;
 }
 
 } // namespace innodb

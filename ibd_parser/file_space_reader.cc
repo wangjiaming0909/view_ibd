@@ -14,7 +14,7 @@ FileSpaceReader::~FileSpaceReader() {
     ifs_.close();
 }
 
-int FileSpaceReader::read_page(Page *pg) {
+int FileSpaceReader::read_page(buf_page_t *pg) {
   std::streampos offset{};
   offset = pg->get_page_id().page_no * PAGE_SIZE;
   auto *buf = pg->get_buf();

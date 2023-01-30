@@ -16,10 +16,10 @@ public:
 
   int get_property(const char* key, std::string& ret);
 
+  int load_properties();
+
 private:
   void init();
-
-  int load_properties();
 
   std::unordered_map<std::string, std::string> properties_map_;
 };

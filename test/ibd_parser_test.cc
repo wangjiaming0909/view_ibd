@@ -63,7 +63,7 @@ TEST(buffer_pool, get_page) {
 }
 
 TEST(dd, t1) {
-  Parser parser{"/root/mysqldata/data/master"};
+  Parser parser{"/xenial/root/mysqldata/data/master"};
   ASSERT_EQ(0, parser.init());
   auto *t1 = parser.get_table("test", "t1");
   ASSERT_TRUE(t1 != nullptr);

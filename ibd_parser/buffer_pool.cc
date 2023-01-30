@@ -70,8 +70,8 @@ FileSpaceReader *buffer_pool_t::get_reader(PageID page_id) {
   return reader_it->second;
 }
 
-Page *buffer_pool_t::read_pg(PageID page_id) {
-  Page *pg = nullptr;
+buf_page_t *buffer_pool_t::read_pg(PageID page_id) {
+  buf_page_t *pg = nullptr;
 
   // try to read it into mem
   auto reader = get_reader(page_id);
@@ -104,7 +104,7 @@ Page *buffer_pool_t::read_pg(PageID page_id) {
   return pg;
 }
 
-Page *buffer_pool_t::get_page(PageID page_id, page_fetch_t mode) {
+buf_page_t *buffer_pool_t::get_page(PageID page_id, page_fetch_t mode) {
   // try to find the page in cache
   auto *page = find_pg_in_cache(page_id);
 
@@ -118,7 +118,7 @@ Page *buffer_pool_t::get_page(PageID page_id, page_fetch_t mode) {
   return page;
 }
 
-Page *buffer_pool_t::find_pg_in_cache(PageID id) {
+buf_page_t *buffer_pool_t::find_pg_in_cache(PageID id) {
   guard_t<lock_t> _{hash_lock_};
   auto it = page_buffer_map_.find(id);
   if (it != page_buffer_map_.end()) {
@@ -129,7 +129,7 @@ Page *buffer_pool_t::find_pg_in_cache(PageID id) {
 
 int buffer_pool_t::add_fil(const char *fil_name) {}
 
-int buffer_pool_t::free_one_page(Page *pg) {
+int buffer_pool_t::free_one_page(buf_page_t *pg) {
   BOOST_ASSERT(pg);
   BOOST_ASSERT(pg->locked_by_me());
 
@@ -148,7 +148,7 @@ int buffer_pool_t::free_one_page(Page *pg) {
   return 0;
 }
 
-int buffer_pool_t::read_page(Page *pg, FileSpaceReader *reader) {
+int buffer_pool_t::read_page(buf_page_t *pg, FileSpaceReader *reader) {
   BOOST_ASSERT(reader);
   BOOST_ASSERT(pg);
 
@@ -159,7 +159,7 @@ int buffer_pool_t::evict_one_page(bool scan_all) {
 
 }
 
-int buffer_pool_t::init_page_for_read(Page *pg, PageID id) {
+int buffer_pool_t::init_page_for_read(buf_page_t *pg, PageID id) {
   BOOST_ASSERT(pg);
   BOOST_ASSERT(!pg->fixed);
   BOOST_ASSERT(pg->locked_by_me());
@@ -176,7 +176,7 @@ int buffer_pool_t::init_page_for_read(Page *pg, PageID id) {
   return 0;
 }
 
-Page *buffer_pool_t::find_free_page() {
+buf_page_t *buffer_pool_t::find_free_page() {
   guard_t<lock_t> _{free_list_lock_};
 
   if (FREE_LIST.empty())
@@ -188,7 +188,7 @@ Page *buffer_pool_t::find_free_page() {
   return &pg;
 }
 
-void buffer_pool_t::lru_add_page(Page *page, bool old) {
+void buffer_pool_t::lru_add_page(buf_page_t *page, bool old) {
   guard_t<lock_t> _{lru_lock_};
 
   if (!old || LRU.size() < BUF_LRU_OLD_MIN_LEN) {
@@ -213,7 +213,7 @@ void buffer_pool_t::lru_add_page(Page *page, bool old) {
   }
 }
 
-void buffer_pool_t::page_make_young_if_needed(Page *pg, page_fetch_t mode) {
+void buffer_pool_t::page_make_young_if_needed(buf_page_t *pg, page_fetch_t mode) {
   BOOST_ASSERT(pg);
 
   guard_t<lock_t> _{lru_lock_};
@@ -222,7 +222,7 @@ void buffer_pool_t::page_make_young_if_needed(Page *pg, page_fetch_t mode) {
     page_make_young(pg);
 }
 
-void buffer_pool_t::page_make_young(Page *pg) {
+void buffer_pool_t::page_make_young(buf_page_t *pg) {
   BOOST_ASSERT(pg);
 
 }

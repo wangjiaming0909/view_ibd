@@ -9,12 +9,12 @@ DD_Properties::DD_Properties()
   init();
 }
 
-void DD_Properties::init() { auto *clust_idx = new Index();
-  clust_idx->set_sp_id(DD_SPACE_ID);
-  clust_idx->set_tb(this);
-  clust_idx->set_n_uniqs(1);
-  clust_idx->set_page_no(DD_PROPETIES_PAGE_NO);
-  indexes_.push_back(clust_idx);
+void DD_Properties::init() {
+    auto *clust_idx = new Index();
+    clust_idx->set_tb(this);
+    clust_idx->set_n_uniqs(1);
+    clust_idx->set_page_id({DD_SPACE_ID, DD_PROPETIES_PAGE_NO});
+    indexes_.push_back(clust_idx);
 }
 
 int DD_Properties::load_properties() {

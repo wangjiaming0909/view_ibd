@@ -1,4 +1,5 @@
 #pragma once
+#include "data.h"
 #include "headers.h"
 #include <map>
 #include <memory>
@@ -69,46 +70,43 @@ struct PageID_Hash {
 using page_list_mem_hook = boost::intrusive::list_member_hook<
     boost::intrusive::constant_time_size<true>>;
 
-class Page {
+class buf_page_t {
 public:
-  friend class buffer_pool_t;
-  Page(unsigned int page_size, byte* d);
-  ~Page();
-  inline std::string get_type() const {
-    return get_page_type_str(FILHeader::page_type((byte*)buf_));
-  }
-  void dump(std::ostringstream &oss) const;
-  void set_space_id(SpaceID sp_id) { page_id_.space_id = sp_id; }
-  void set_page_no(PageNO pg_no) { page_id_.page_no = pg_no; }
-  byte *get_buf() { return buf_; }
-  PageID get_page_id() const { return page_id_; }
-
-  /// @return return true if fix succeed, else return false
+  buf_page_t(byte* buf);
+  byte* get_buf() {return buf_;}
   bool fix_page();
   bool unfix_page();
-
-  void lock_page() { page_lock_.lock(); }
-  void unlock_page() { page_lock_.unlock(); }
-  bool locked_by_me() const { return true; }
-
+  void lock_page() {page_lock_.lock();}
+  void unlock_page() {page_lock_.unlock();}
+  bool locked_by_me() const {return true;}
+  void set_old(bool old) {old_ = old;}
+  PageID get_page_id() const { return page_id_; }
   page_list_mem_hook list_hook;
-
-  void set_old(bool old) { old_ = old; }
-
-private:
-  unsigned int page_size_; // bytes
+  PAGE_TYPE page_type() const;
+  record_ptr_t first_rec();
+PROTECTED:
   byte* buf_;
-  PageID page_id_;
   std::atomic_bool fixed = false;
-
+  PageID page_id_;
   lock_t page_lock_;
   bool old_;
 };
 
-using page_list_hook_options =
-    boost::intrusive::member_hook<Page, page_list_mem_hook, &Page::list_hook>;
+class Page : public buf_page_t {
+public:
+  friend class buffer_pool_t;
+  Page(unsigned int page_size, byte* d);
+  ~Page();
+  void dump(std::ostringstream &oss) const;
 
-using page_list_t = boost::intrusive::list<Page, page_list_hook_options>;
+private:
+  unsigned int page_size_; // bytes
+};
+
+using page_list_hook_options =
+    boost::intrusive::member_hook<buf_page_t, page_list_mem_hook, &buf_page_t::list_hook>;
+
+using page_list_t = boost::intrusive::list<buf_page_t, page_list_hook_options>;
 
 using PagePtr = std::unique_ptr<Page>;
 

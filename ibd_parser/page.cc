@@ -17,7 +17,9 @@ bool operator==(const PageID &l, const PageID &r) {
 }
 
 Page::Page(unsigned int page_size, byte *d)
-    : page_size_(page_size), buf_(d), page_lock_(), old_(false) {}
+    : buf_page_t(d), page_size_(page_size) {}
+
+buf_page_t::buf_page_t(byte* buf) : buf_(buf), page_id_(0,0), page_lock_(), old_(false){}
 
 void Page::dump(std::ostringstream &oss) const {
   FILHeader::dump(BUF, oss);
@@ -31,6 +33,10 @@ void Page::dump(std::ostringstream &oss) const {
   }
 }
 
+PAGE_TYPE buf_page_t::page_type() const {
+  return (PAGE_TYPE)FILHeader::page_type(BUF);
+}
+
 Page::~Page() {}
 
 void IndexPage::dump(const byte *b, std::ostringstream &oss) {
@@ -40,15 +46,21 @@ void IndexPage::dump(const byte *b, std::ostringstream &oss) {
   IndexPageDirectory::dump(b, oss);
 }
 
-bool Page::fix_page() {
+bool buf_page_t::fix_page() {
   bool expect = false;
   return fixed.compare_exchange_strong(expect, true,
                                        std::memory_order::memory_order_seq_cst);
 }
 
-bool Page::unfix_page() {
+bool buf_page_t::unfix_page() {
   bool expect = true;
   return fixed.compare_exchange_strong(expect, false,
                                        std::memory_order::memory_order_seq_cst);
 }
+
+record_ptr_t buf_page_t::first_rec() {
+  auto * const infimum = BUF + PAGE_NEW_INFIMUM;
+  return std::make_shared<Record>(BUF + RecordHeader::next_offs(infimum), this);
+}
+
 } // namespace innodb

@@ -28,10 +28,9 @@ struct Field{
 };
 
 class Index {
-  SpaceID sp_id_;
   uint n_uniqs_;
   Table *tb_;
-  PageNO pg_no_;
+  PageID page_id_;
 
 public:
   enum class Rec_Comp_Res {
@@ -47,18 +46,14 @@ public:
   // @return 0 if found, -1 if not found
   int search(Rec_Oper_t &func, const Rec_Comp_t &comp);
 
-  void set_sp_id(SpaceID sp_id) { sp_id_ = sp_id; }
   void set_tb(Table *tb) { tb_ = tb; }
   void set_n_uniqs(uint v) { n_uniqs_ = v; }
-  void set_page_no(PageNO pg_no) { pg_no_ = pg_no; }
+  void set_page_id(PageID pg_id) {page_id_ = pg_id;}
 
   static const Rec_Comp_t Always_True_Comp;
   static const Rec_Comp_t True_Once_Comp;
 
 private:
-  // @breif return the first rec in the index
-  byte* get_first_rec();
-  int get_next_rec();
 };
 
 class Table {

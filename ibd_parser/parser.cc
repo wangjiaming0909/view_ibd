@@ -23,7 +23,7 @@ innodb::Table *Parser::get_table(const char *schema, const char *tb_name) {
   schema_tb_name += tb_name;
   auto it = tables_.find(schema_tb_name);
   if (it != tables_.end()) {
-    if (it->second->is_inited()) {
+    if (!it->second->is_inited()) {
       innodb::TableLoader loader(*it->second);
       if (0 != loader.load()) return nullptr;
     }

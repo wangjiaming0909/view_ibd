@@ -14,7 +14,7 @@ public:
   /// @brief get the specified page
   /// @param pg the page to writen data into
   /// @return 0 if the data has been writen into page, otherwise -1 is returned
-  int read_page(Page *pg);
+  int read_page(buf_page_t *pg);
 
 private:
   /// @brief open the file
