@@ -1,0 +1,5 @@
+#~/Qt/Tools/CMake/bin/cmake -S /home/jiaming/codes/view_ibd -B /home/jiaming/codes/view_ibd/build/Desktop_Qt_6_9 -DCMAKE_EXPORT_COMPILE_COMMANDS=1 
+cd build && \
+	cmake \
+	-DCMAKE_BUILD_TYPE=Debug \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=1 .. && make -j12

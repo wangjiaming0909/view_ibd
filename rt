@@ -1,0 +1,3 @@
+#!/bin/bash
+
+bash bd && ./build/test/view_ibd_test

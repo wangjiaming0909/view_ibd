@@ -5,6 +5,7 @@
 #include <ostream>
 
 using namespace std;
+/*
 void custom_glog_prefix(std::ostream &s, const google::LogMessageInfo &l,
                         void *) {
   s << l.severity[0] << " " << setw(4) << 1900 + l.time.year() << setw(2)
@@ -14,9 +15,10 @@ void custom_glog_prefix(std::ostream &s, const google::LogMessageInfo &l,
     << setw(5) << l.thread_id << setfill('0') << ' ' << l.filename << ':'
     << l.line_number << "]";
 }
+*/
 
 void setup_logger(const char* argv0) {
-  google::InitGoogleLogging(argv0, custom_glog_prefix);
+  google::InitGoogleLogging(argv0);
 }
 
 int main(int argc, char **argv) {
